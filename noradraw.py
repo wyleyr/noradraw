@@ -33,7 +33,8 @@ class Drawing:
         for point in self.points:
             self.window.addstr(*point)
             self.window.refresh()
-            time.sleep(0.5)
+            time.sleep(0.2)
+            # TODO: allow quit?/jump to end?
             
 
 def move_by(window, dy, dx):
