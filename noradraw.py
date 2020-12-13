@@ -73,7 +73,7 @@ def main(scr):
             drawing = Drawing(scr)
         elif c == ord("p"): # PEN UP/DOWN
             drawing.pen_down = not drawing.pen_down
-        elif c in map(ord, "+*^-xX#oO=_|\/~ "): # PEN TIP
+        elif c in map(ord, " ~`!@#$%^&*()-_+=vVxXoO|\/[]{}'.:<>\""): # PEN TIP
             drawing.pen_tip = chr(c)
         elif c in map(ord, "01234567"): # COLOR SELECTION
             drawing.color_pair = int(chr(c))
