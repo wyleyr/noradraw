@@ -110,6 +110,7 @@ def move_by(window, dy, dx):
 
 def reset(scr):
     scr.clear()
+    scr.refresh()
     scr.move(curses.LINES//2, curses.COLS//2)
 
 def directory_setup():
@@ -141,8 +142,8 @@ def main(scr):
            drawing.color_pair = (drawing.color_pair + 1) % 8
            tutor.change_color()
         elif c == ord("n"): # NEW DRAWING
-            reset(scr)
             drawing = Drawing(scr)
+            reset(scr)
             tutor.new()
         elif c == ord("p"): # PEN UP/DOWN
             drawing.pen_down = not drawing.pen_down
