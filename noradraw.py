@@ -54,6 +54,50 @@ class Drawing:
                 self.fname = fname
                 self.replay()
         
+class Tutor:
+    def __init__(self, parent_window):
+        self.parent = parent_window
+        self.played = set()
+
+    def message(self, msg, timeout=None):
+        msg_win = curses.newwin(7, curses.COLS, 0, 0)
+        msg_win.bkgdset(" ", curses.color_pair(0))
+        msg_win.addstr(1, 1, r" /\___/\ ", curses.A_BOLD)
+        msg_win.addstr(2, 1, r"; ^   ^ :", curses.A_BOLD)
+        msg_win.addstr(3, 1, r"|(o)^(o)|", curses.A_BOLD) 
+        msg_win.addstr(4, 1, r" \  V   /", curses.A_BOLD)
+        msg_win.addstr(5, 1, r"  \    / ", curses.A_BOLD)
+
+        for i, line in enumerate(msg.splitlines()):
+            msg_win.addstr(i+1, 12, line)
+            if i > 5:
+                break
+
+        msg_win.border()
+        msg_win.refresh()
+        time.sleep(timeout or 3)
+        del msg_win
+        self.parent.touchwin()
+        self.parent.refresh()
+
+    def new(self):
+        if 'new' not in self.played:
+            self.message("N is for NORA and also for NEW!\nLooks like you've got some drawing to do.")
+        self.played.add('new')
+
+    def change_color(self):
+        if 'change' not in self.played:
+            self.message("C is for CHANGE\nand also for COLOR\nPress C again when you want another")
+        self.played.add('change')
+
+    def pen(self):
+        if 'pen' not in self.played:
+            self.message("""P is for PEN which draws on the PAGE\nPress P to PICK up the pen\nAnd to PUT it back down""")
+        self.played.add('pen')
+
+
+
+
 
 def move_by(window, dy, dx):
     y, x = window.getyx()
@@ -76,6 +120,7 @@ def main(scr):
     reset(scr)
     init_colors()
     drawing = Drawing(scr)
+    tutor = Tutor(scr)
     save_dir = directory_setup()
     
     while True:
@@ -92,26 +137,24 @@ def main(scr):
             y, x = move_by(scr,0,-1)
         elif c == ord("c"): # CHANGE COLORS
            drawing.color_pair = (drawing.color_pair + 1) % 10
+           tutor.change_color()
         elif c == ord("n"): # NEW DRAWING
             reset(scr)
             drawing = Drawing(scr)
-            message("N is for NORA and also for NEW!\nLooks like you've got some drawing to do.")
+            tutor.new()
         elif c == ord("p"): # PEN UP/DOWN
             drawing.pen_down = not drawing.pen_down
-            message("""P is for PEN which draws on the PAGE
-Press P to PICK up the pen
-And to PUT it back down""")
-            scr.touchwin()
-            scr.refresh()
+            tutor.pen()
         elif c in map(ord, " ~`!@#$%^&*()-_+=vVxXoO|\/[]{}'.:<>\""): # PEN TIP
             drawing.pen_tip = chr(c)
         elif c in map(ord, "01234567"): # COLOR SELECTION
             drawing.color_pair = int(chr(c))
-        elif c == ord("R"): # REPLAY CURRENT DRAWING
+        elif c == ord("r"): # REPLAY CURRENT DRAWING
+            tutor.message("OK, now it's my turn!")
             drawing.replay()
         elif c == ord("s"): # SAVE CURRENT DRAWING
             drawing.save(save_dir)
-            # TODO: message("OK, I saved your drawing.")
+            tutor.message("I saved your drawing!")
         elif c == ord("l"): # LOAD SAVED DRAWING
             drawing = Drawing(scr)
             drawing.load_random(save_dir)
