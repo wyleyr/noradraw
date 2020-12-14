@@ -8,6 +8,8 @@ def init_colors():
     curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_RED)
     curses.init_pair(6, curses.COLOR_BLUE, curses.COLOR_CYAN)
     curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_WHITE)
+    # curses.init_pair(8, curses.COLOR_BLACK, 208) # orange-ish 
+    # curses.init_pair(9, curses.COLOR_YELLOW, 53) # darker purple-ish 
 
 class Drawing:
     def __init__(self, window, bgcolor=curses.COLOR_BLACK):
@@ -136,7 +138,7 @@ def main(scr):
         elif c == curses.KEY_LEFT:
             y, x = move_by(scr,0,-1)
         elif c == ord("c"): # CHANGE COLORS
-           drawing.color_pair = (drawing.color_pair + 1) % 10
+           drawing.color_pair = (drawing.color_pair + 1) % 8
            tutor.change_color()
         elif c == ord("n"): # NEW DRAWING
             reset(scr)
