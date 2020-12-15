@@ -64,7 +64,8 @@ class Tutor:
         self.played = set()
 
     def owl_win(self):
-        owl_win = curses.newwin(7, curses.COLS, 0, 0)
+        max_y, max_x = self.parent.getmaxyx()
+        owl_win = curses.newwin(7, max_x, 0, 0)
         owl_win.bkgdset(" ", curses.color_pair(0))
         owl_win.addstr(1, 1, r" /\___/\ ", curses.A_BOLD)
         owl_win.addstr(2, 1, r"; ^   ^ :", curses.A_BOLD)
@@ -119,14 +120,14 @@ class Tutor:
         msg_win.addstr(" etc. are PEN TIPS")
 
         y, x = msg_win.getyx()
-        msg_win.move(y+1, 0)
+        msg_win.move(y+1, 1)
         msg_win.addstr("C", curses.A_BOLD)
         msg_win.addstr(": CHANGE COLOR ")
         msg_win.addstr("P", curses.A_BOLD)
         msg_win.addstr(": PEN UP/DOWN ")
 
         y, x = msg_win.getyx()
-        msg_win.move(y+1, 0)
+        msg_win.move(y+1, 1)
         msg_win.addstr("N", curses.A_BOLD)
         msg_win.addstr(": NEW DRAWING ")
         msg_win.addstr("S", curses.A_BOLD)
@@ -149,15 +150,17 @@ class Tutor:
 
 def move_by(window, dy, dx):
     y, x = window.getyx()
-    newy = (y + dy) % curses.LINES
-    newx = (x + dx) % curses.COLS
+    maxy, maxx = window.getmaxyx()
+    newy = (y + dy) % maxy
+    newx = (x + dx) % maxx
     window.move(newy, newx)
     return window.getyx()
 
 def reset(scr):
     scr.clear()
     scr.refresh()
-    scr.move(curses.LINES//2, curses.COLS//2)
+    max_y, max_x = scr.getmaxyx()
+    scr.move(max_y//2, max_x//2)
 
 
 def directory_setup():
