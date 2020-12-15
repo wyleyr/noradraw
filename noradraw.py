@@ -11,6 +11,8 @@ def init_colors():
     # curses.init_pair(8, curses.COLOR_BLACK, 208) # orange-ish 
     # curses.init_pair(9, curses.COLOR_YELLOW, 53) # darker purple-ish 
 
+PEN_TIPS = " ~`!@#$%^&*()-_+=vVxXoO|\/[]{}'.:<>\""
+
 class Drawing:
     def __init__(self, window, bgcolor=curses.COLOR_BLACK):
         self.bgcolor = bgcolor
@@ -61,21 +63,28 @@ class Tutor:
         self.parent = parent_window
         self.played = set()
 
-    def message(self, msg, timeout=None):
-        msg_win = curses.newwin(7, curses.COLS, 0, 0)
-        msg_win.bkgdset(" ", curses.color_pair(0))
-        msg_win.addstr(1, 1, r" /\___/\ ", curses.A_BOLD)
-        msg_win.addstr(2, 1, r"; ^   ^ :", curses.A_BOLD)
-        msg_win.addstr(3, 1, r"|(o)^(o)|", curses.A_BOLD) 
-        msg_win.addstr(4, 1, r" \  V   /", curses.A_BOLD)
-        msg_win.addstr(5, 1, r"  \    / ", curses.A_BOLD)
+    def owl_win(self):
+        owl_win = curses.newwin(7, curses.COLS, 0, 0)
+        owl_win.bkgdset(" ", curses.color_pair(0))
+        owl_win.addstr(1, 1, r" /\___/\ ", curses.A_BOLD)
+        owl_win.addstr(2, 1, r"; ^   ^ :", curses.A_BOLD)
+        owl_win.addstr(3, 1, r"|(o)^(o)|", curses.A_BOLD) 
+        owl_win.addstr(4, 1, r" \  V   /", curses.A_BOLD)
+        owl_win.addstr(5, 1, r"  \    / ", curses.A_BOLD)
+        owl_win.border()
+        owl_win.refresh()
 
+        msg_win = owl_win.subwin(1,13)
+        return msg_win
+
+
+    def message(self, msg, timeout=None):
+        msg_win = self.owl_win()
         for i, line in enumerate(msg.splitlines()):
-            msg_win.addstr(i+1, 12, line)
+            msg_win.addstr(i, 0, line)
             if i > 5:
                 break
 
-        msg_win.border()
         msg_win.refresh()
         time.sleep(timeout or 3)
         del msg_win
@@ -97,7 +106,44 @@ class Tutor:
             self.message("""P is for PEN which draws on the PAGE\nPress P to PICK up the pen\nAnd to PUT it back down""")
         self.played.add('pen')
 
+    def help(self):
+        if len(self.played) < 2:
+            self.message("Play around a little more.\nYou'll soon figure everything out!\nYou can ask me for more help later.")
+            return
 
+        msg_win = self.owl_win()
+        for i in range(8):
+            msg_win.addstr(" %d " % i, curses.color_pair(i) | curses.A_BOLD)
+        msg_win.addstr(": COLORS ")
+        msg_win.addstr("/*|!", curses.A_BOLD)
+        msg_win.addstr(" etc. are PEN TIPS")
+
+        y, x = msg_win.getyx()
+        msg_win.move(y+1, 0)
+        msg_win.addstr("C", curses.A_BOLD)
+        msg_win.addstr(": CHANGE COLOR ")
+        msg_win.addstr("P", curses.A_BOLD)
+        msg_win.addstr(": PEN UP/DOWN ")
+
+        y, x = msg_win.getyx()
+        msg_win.move(y+1, 0)
+        msg_win.addstr("N", curses.A_BOLD)
+        msg_win.addstr(": NEW DRAWING ")
+        msg_win.addstr("S", curses.A_BOLD)
+        msg_win.addstr(": SAVE DRAWING ")
+        msg_win.addstr("L", curses.A_BOLD)
+        msg_win.addstr(": LOAD DRAWING ")
+        msg_win.addstr("R", curses.A_BOLD)
+        msg_win.addstr(": RICHARD REPLAYS ")
+
+        y, x = msg_win.getyx()
+        msg_win.move(y+1, 0)
+        msg_win.addstr("Q", curses.A_BOLD)
+        msg_win.addstr(": QUIT")
+
+        msg_win.refresh()
+
+        #"0-7: COLORS C: CHANGE COLOR ...: PEN TIPS N: NEW DRAWING R: RICHARD REPLAY S: SAVE L: LOAD Q: QUIT"
 
 
 
@@ -113,12 +159,14 @@ def reset(scr):
     scr.refresh()
     scr.move(curses.LINES//2, curses.COLS//2)
 
+
 def directory_setup():
     drawingsdir = os.path.expanduser("~/drawings")
     if not os.path.exists(drawingsdir):
         os.mkdir(drawingsdir)
 
     return drawingsdir
+
 def main(scr):
     reset(scr)
     init_colors()
@@ -148,7 +196,7 @@ def main(scr):
         elif c == ord("p"): # PEN UP/DOWN
             drawing.pen_down = not drawing.pen_down
             tutor.pen()
-        elif c in map(ord, " ~`!@#$%^&*()-_+=vVxXoO|\/[]{}'.:<>\""): # PEN TIP
+        elif c in map(ord, PEN_TIPS): # PEN TIP
             drawing.pen_tip = chr(c)
         elif c in map(ord, "01234567"): # COLOR SELECTION
             drawing.color_pair = int(chr(c))
@@ -162,6 +210,8 @@ def main(scr):
             drawing = Drawing(scr)
             drawing.load_random(save_dir)
             #TODO: message("No pictures to load!")
+        elif c == ord("?") or c == ord("h"): # HELP
+            tutor.help()
 
         drawing.draw()
 
