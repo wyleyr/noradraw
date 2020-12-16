@@ -46,6 +46,7 @@ class Drawing:
         time.sleep(1)
         for point in self.points:
             self.window.addstr(*point)
+            move_by(self.window,0,-1) # addstr moves the cursor to the right; move back
             self.window.refresh()
             time.sleep(0.2)
             # TODO: allow quit?/jump to end?
