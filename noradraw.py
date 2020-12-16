@@ -221,10 +221,6 @@ def main(scr):
             drawing.erase_last()
             tutor.erase()
             inhibit_next_draw = True
-        elif c in map(ord, PEN_TIPS): # PEN TIP
-            drawing.pen_tip = chr(c)
-        elif c in map(ord, "01234567"): # COLOR SELECTION
-            drawing.color_pair = int(chr(c))
         elif c == ord("r"): # REPLAY CURRENT DRAWING
             tutor.message("OK, now it's my turn!")
             drawing.replay()
@@ -237,6 +233,10 @@ def main(scr):
             #TODO: message("No pictures to load!")
         elif c == ord("?") or c == ord("h"): # HELP
             tutor.help()
+        elif c in map(ord, PEN_TIPS): # PEN TIP
+            drawing.pen_tip = chr(c)
+        elif c in map(ord, "01234567"): # COLOR SELECTION
+            drawing.color_pair = int(chr(c))
 
         if inhibit_next_draw:
             inhibit_next_draw = False
