@@ -31,6 +31,15 @@ class Drawing:
             self.window.addstr(*point)
             move_by(self.window,0,-1) # addstr moves the cursor to the right; move back
 
+    def erase_last(self):
+        if self.points: # we can only erase existing points
+            y, x, _, _ = self.points.pop(-1)
+            self.window.addstr(y, x, " ", curses.color_pair(0))
+        if self.points: # restore to previous point before erased point, if any
+            prev_point = self.points[-1]
+            self.window.move(prev_point[0], prev_point[1])
+        self.window.refresh()
+        
     def replay(self):
         self.window.clear()
         self.window.refresh()
@@ -102,9 +111,14 @@ class Tutor:
             self.message("C is for CHANGE\nand also for COLOR\nPress C again when you want another")
         self.played.add('change')
 
+    def erase(self):
+        if 'erase' not in self.played:
+            self.message("E is for ERASE\nIt deletes your mistakes\nat a moderate pace")
+        self.played.add('erase')
+
     def pen(self):
         if 'pen' not in self.played:
-            self.message("""P is for PEN which draws on the PAGE\nPress P to PICK up the pen\nAnd to PUT it back down""")
+            self.message("P is for PEN which draws on the PAGE\nPress P to PICK up the pen\nAnd to PUT it back down")
         self.played.add('pen')
 
     def help(self):
@@ -125,6 +139,9 @@ class Tutor:
         msg_win.addstr(": CHANGE COLOR ")
         msg_win.addstr("P", curses.A_BOLD)
         msg_win.addstr(": PEN UP/DOWN ")
+        msg_win.addstr("E", curses.A_BOLD)
+        msg_win.addstr(": ERASE ")
+
 
         y, x = msg_win.getyx()
         msg_win.move(y+1, 1)
@@ -176,6 +193,7 @@ def main(scr):
     drawing = Drawing(scr)
     tutor = Tutor(scr)
     save_dir = directory_setup()
+    inhibit_next_draw = False
     
     while True:
         c = scr.getch()
@@ -199,6 +217,10 @@ def main(scr):
         elif c == ord("p"): # PEN UP/DOWN
             drawing.pen_down = not drawing.pen_down
             tutor.pen()
+        elif c == ord("e"): # ERASE
+            drawing.erase_last()
+            tutor.erase()
+            inhibit_next_draw = True
         elif c in map(ord, PEN_TIPS): # PEN TIP
             drawing.pen_tip = chr(c)
         elif c in map(ord, "01234567"): # COLOR SELECTION
@@ -216,6 +238,9 @@ def main(scr):
         elif c == ord("?") or c == ord("h"): # HELP
             tutor.help()
 
-        drawing.draw()
+        if inhibit_next_draw:
+            inhibit_next_draw = False
+        else:
+            drawing.draw()
 
 curses.wrapper(main)    
