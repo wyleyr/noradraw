@@ -129,40 +129,39 @@ class Tutor:
         msg_win = self.owl_win()
         for i in range(8):
             msg_win.addstr(" %d " % i, curses.color_pair(i) | curses.A_BOLD)
-        msg_win.addstr(": COLORS ")
+        msg_win.addstr(": COLORS    ")
         msg_win.addstr("/*|!", curses.A_BOLD)
         msg_win.addstr(" etc. are PEN TIPS")
 
         y, x = msg_win.getyx()
         msg_win.move(y+1, 1)
         msg_win.addstr("C", curses.A_BOLD)
-        msg_win.addstr(": CHANGE COLOR ")
+        msg_win.addstr(": CHANGE COLOR   ")
         msg_win.addstr("P", curses.A_BOLD)
-        msg_win.addstr(": PEN UP/DOWN ")
+        msg_win.addstr(": PEN UP/DOWN   ")
         msg_win.addstr("E", curses.A_BOLD)
-        msg_win.addstr(": ERASE ")
+        msg_win.addstr(": ERASE   ")
 
 
         y, x = msg_win.getyx()
         msg_win.move(y+1, 1)
         msg_win.addstr("N", curses.A_BOLD)
-        msg_win.addstr(": NEW DRAWING ")
+        msg_win.addstr(": NEW DRAWING    ")
         msg_win.addstr("S", curses.A_BOLD)
-        msg_win.addstr(": SAVE DRAWING ")
+        msg_win.addstr(": SAVE DRAWING  ")
         msg_win.addstr("L", curses.A_BOLD)
-        msg_win.addstr(": LOAD DRAWING ")
+        msg_win.addstr(": LOAD DRAWING  ")
         msg_win.addstr("R", curses.A_BOLD)
         msg_win.addstr(": RICHARD REPLAYS ")
 
         y, x = msg_win.getyx()
-        msg_win.move(y+1, 0)
+        msg_win.move(y+1, 1)
         msg_win.addstr("Q", curses.A_BOLD)
         msg_win.addstr(": QUIT")
 
         msg_win.refresh()
-
-        #"0-7: COLORS C: CHANGE COLOR ...: PEN TIPS N: NEW DRAWING R: RICHARD REPLAY S: SAVE L: LOAD Q: QUIT"
-
+        #TODO: this breaks input. msg_win.getkey()
+        del msg_win
 
 
 def move_by(window, dy, dx):
@@ -190,6 +189,7 @@ def directory_setup():
 def main(scr):
     reset(scr)
     init_colors()
+    pad = curses.newpad(128, 368) # big enough for a fullscreen terminal on a large screen
     drawing = Drawing(scr)
     tutor = Tutor(scr)
     save_dir = directory_setup()
