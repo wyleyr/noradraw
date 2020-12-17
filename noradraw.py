@@ -98,7 +98,6 @@ class Tutor:
         msg_win = owl_win.subwin(1,13)
         return msg_win
 
-
     def message(self, msg, timeout=None):
         msg_win = self.owl_win()
         for i, line in enumerate(msg.splitlines()):
@@ -228,12 +227,18 @@ def main(scr):
             tutor.message("OK, now it's my turn!")
             drawing.replay()
         elif c == ord("s"): # SAVE CURRENT DRAWING
-            drawing.save(save_dir)
-            tutor.message("I saved your drawing!")
+            try:
+                drawing.save(save_dir)
+                tutor.message("I saved your drawing!")
+            except IOError:
+                tutor.message("Sorry, something went wrong.\nI couldn't save this drawing.")
         elif c == ord("l"): # LOAD SAVED DRAWING
-            drawing = Drawing(scr)
-            drawing.load_random(save_dir)
-            #TODO: message("No pictures to load!")
+            try:
+                drawing = Drawing(scr)
+                tutor.message("Here's a drawing you made!\n(Or someone made for you!)")
+                drawing.load_random(save_dir)
+            except IndexError:
+                message("There are no drawings to load!\nYou should save one first.")
         elif c == ord("?") or c == ord("h"): # HELP
             tutor.help()
         elif c in map(ord, PEN_TIPS): # PEN TIP
