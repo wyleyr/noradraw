@@ -23,13 +23,23 @@ class Drawing:
         self.color_pair = 1
         self.fname = None
  
+
+    def move_by(self, dy, dx):
+        y, x = self.window.getyx()
+        maxy, maxx = self.window.getmaxyx()
+        newy = (y + dy) % maxy
+        newx = (x + dx) % maxx
+        self.window.move(newy, newx)
+        
+        return self.window.getyx()
+
     def draw(self):
         if self.pen_down:
             y, x = self.window.getyx()
             point = y, x, self.pen_tip, curses.color_pair(self.color_pair)
             self.points.append(point)
             self.window.addstr(*point)
-            move_by(self.window,0,-1) # addstr moves the cursor to the right; move back
+            self.move_by(0,-1*len(self.pen_tip)) # addstr moves the cursor to the right; move back
 
     def erase_last(self):
         if self.points: # we can only erase existing points
@@ -46,7 +56,7 @@ class Drawing:
         time.sleep(1)
         for point in self.points:
             self.window.addstr(*point)
-            move_by(self.window,0,-1) # addstr moves the cursor to the right; move back
+            self.move_by(0,-1) # addstr moves the cursor to the right; move back
             self.window.refresh()
             time.sleep(0.2)
             # TODO: allow quit?/jump to end?
@@ -165,14 +175,6 @@ class Tutor:
         del msg_win
 
 
-def move_by(window, dy, dx):
-    y, x = window.getyx()
-    maxy, maxx = window.getmaxyx()
-    newy = (y + dy) % maxy
-    newx = (x + dx) % maxx
-    window.move(newy, newx)
-    return window.getyx()
-
 def reset(scr):
     scr.clear()
     scr.refresh()
@@ -201,13 +203,13 @@ def main(scr):
         if c == ord("q"):
             break
         elif c == curses.KEY_UP:
-            y, x = move_by(scr,-1,0)
+            drawing.move_by(-1,0)
         elif c == curses.KEY_DOWN:
-            y, x = move_by(scr,1,0)
+            drawing.move_by(1,0)
         elif c == curses.KEY_RIGHT:
-            y, x = move_by(scr,0,1)
+            drawing.move_by(0,1)
         elif c == curses.KEY_LEFT:
-            y, x = move_by(scr,0,-1)
+            drawing.move_by(0,-1)
         elif c == ord("c"): # CHANGE COLORS
            drawing.color_pair = (drawing.color_pair + 1) % 8
            tutor.change_color()
