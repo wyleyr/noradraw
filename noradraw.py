@@ -54,7 +54,7 @@ class Drawing:
         self.window.clear()
         self.window.refresh()
         time.sleep(1)
-        wait = min(0.2, 60/len(self.points)) # don't take longer than 1min 
+        wait = min(0.2, 60/(1+len(self.points))) # don't take longer than 1min 
         for point in self.points:
             self.window.addstr(*point)
             self.move_by(0,-1) # addstr moves the cursor to the right; move back
