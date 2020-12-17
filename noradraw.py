@@ -54,11 +54,12 @@ class Drawing:
         self.window.clear()
         self.window.refresh()
         time.sleep(1)
+        wait = min(0.2, 60/len(self.points)) # don't take longer than 1min 
         for point in self.points:
             self.window.addstr(*point)
             self.move_by(0,-1) # addstr moves the cursor to the right; move back
-            self.window.refresh()
-            time.sleep(0.2)
+            self.refresh()
+            time.sleep(wait)
             # TODO: allow quit?/jump to end?
             
     def save(self, drawingsdir):
