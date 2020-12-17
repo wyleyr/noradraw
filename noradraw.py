@@ -240,6 +240,12 @@ def main(scr):
                 drawing.load_random(save_dir)
             except IndexError:
                 message("There are no drawings to load!\nYou should save one first.")
+        elif c == ord("D"): # DELETE
+            if drawing.fname:
+                os.remove(drawing.fname)
+                tutor.message("Deleted %s" % drawing.fname)
+                drawing = Drawing(pad, scr)
+                reset(scr)
         elif c == ord("?") or c == ord("h"): # HELP
             tutor.help()
         elif c in map(ord, PEN_TIPS): # PEN TIP
