@@ -14,15 +14,23 @@ def init_colors():
 PEN_TIPS = " ~`!@#$%^&*()-_+=vVxXoO|\/[]{}'.:<>\""
 
 class Drawing:
-    def __init__(self, window, bgcolor=curses.COLOR_BLACK):
-        self.bgcolor = bgcolor
-        self.window = window #curses.newwin()
+    def __init__(self, screen):
+        self.window = curses.newpad(128, 368) # big enough for a fullscreen terminal on a large screen
+        self.screen = screen
         self.points = []
         self.pen_down = True
         self.pen_tip = " "
         self.color_pair = 1
         self.fname = None
- 
+
+        # the pad coordinates which will be displayed at the upper
+        # left corner of the screen:
+        self.corner_y = 0
+        self.corner_x = 0
+
+        # place the cursor in the middle of the *screen* on init
+        scrmax_y, scrmax_x = self.screen.getmaxyx()
+        self.window.move(scrmax_y//2, scrmax_x//2)
 
     def move_by(self, dy, dx):
         y, x = self.window.getyx()
@@ -40,6 +48,7 @@ class Drawing:
             self.points.append(point)
             self.window.addstr(*point)
             self.move_by(0,-1*len(self.pen_tip)) # addstr moves the cursor to the right; move back
+        self.refresh()
 
     def erase_last(self):
         if self.points: # we can only erase existing points
@@ -48,11 +57,10 @@ class Drawing:
         if self.points: # restore to previous point before erased point, if any
             prev_point = self.points[-1]
             self.window.move(prev_point[0], prev_point[1])
-        self.window.refresh()
         
     def replay(self):
         self.window.clear()
-        self.window.refresh()
+        self.refresh()
         time.sleep(1)
         wait = min(0.2, 60/(1+len(self.points))) # don't take longer than 1min 
         for point in self.points:
@@ -61,6 +69,53 @@ class Drawing:
             self.refresh()
             time.sleep(wait)
             # TODO: allow quit?/jump to end?
+
+    def find_corner(self):
+        if not self.points:
+            min_y, min_x = 0, 0
+        else:
+            scrmax_y, scrmax_x = min_y, min_x = self.screen.getmaxyx()
+            max_y, max_x = 0, 0
+            for y, x, _, _ in self.points:
+                if y < min_y:
+                    min_y = y
+                if x < min_x:
+                    min_x = x
+                if y > max_y:
+                    max_y = y
+                if x > max_x:
+                    max_x = x
+
+            # set a new corner if the drawing is offscreen:
+            if max_y > scrmax_y or max_x > scrmax_x:
+                self.corner_y = max(min_y - 2, 0) 
+                self.corner_x = max(min_x - 2, 0)
+
+        return self.corner_y, self.corner_x
+
+    def recenter(self):
+        "Reorient and redisplay the current drawing onscreen after a resize or load"
+        # Find the new upper left corner:
+        p_y, p_x = self.find_corner()
+        scrmax_y, scrmax_x = self.screen.getmaxyx()
+
+        # without this, self.window doesn't refresh:
+        self.screen.clear()
+        self.screen.refresh() 
+
+        # redisplay the drawing, placing the new upper left corner coordinates
+        # of the drawing at 0,0 on the screen:
+        self.window.touchwin()
+        self.window.refresh(p_y, p_x, 0, 0, scrmax_y-1, scrmax_x-1)
+
+        # make sure the cursor ends up onscreen:
+        cur_y, cur_x = self.window.getyx()
+        self.window.move(min(cur_y, scrmax_y + p_y - 1), min(cur_x, scrmax_x + p_x - 1))
+        
+
+    def refresh(self):
+        scrmax_y, scrmax_x = self.screen.getmaxyx()
+        self.window.refresh(self.corner_y, self.corner_x, 0, 0, scrmax_y-1, scrmax_x-1)
             
     def save(self, drawingsdir):
         if not self.fname:
@@ -77,6 +132,7 @@ class Drawing:
             with open(fname, "rb") as load_file:
                 self.points = pickle.load(load_file)
                 self.fname = fname
+                self.recenter() 
                 self.replay()
         
 class Tutor:
@@ -192,7 +248,6 @@ def directory_setup():
 def main(scr):
     reset(scr)
     init_colors()
-    pad = curses.newpad(128, 368) # big enough for a fullscreen terminal on a large screen
     drawing = Drawing(scr)
     tutor = Tutor(scr)
     save_dir = directory_setup()
@@ -202,6 +257,9 @@ def main(scr):
         c = scr.getch()
         if c == ord("q"):
             break
+        elif c == curses.KEY_RESIZE:
+            drawing.recenter()
+            continue
         elif c == curses.KEY_UP:
             drawing.move_by(-1,0)
         elif c == curses.KEY_DOWN:
@@ -214,8 +272,8 @@ def main(scr):
            drawing.color_pair = (drawing.color_pair + 1) % 8
            tutor.change_color()
         elif c == ord("n"): # NEW DRAWING
-            drawing = Drawing(scr)
             reset(scr)
+            drawing = Drawing(scr)
             tutor.new()
         elif c == ord("p"): # PEN UP/DOWN
             drawing.pen_down = not drawing.pen_down
@@ -227,6 +285,7 @@ def main(scr):
         elif c == ord("r"): # REPLAY CURRENT DRAWING
             tutor.message("OK, now it's my turn!")
             drawing.replay()
+            continue
         elif c == ord("s"): # SAVE CURRENT DRAWING
             try:
                 drawing.save(save_dir)
@@ -240,12 +299,14 @@ def main(scr):
                 drawing.load_random(save_dir)
             except IndexError:
                 message("There are no drawings to load!\nYou should save one first.")
+            continue
         elif c == ord("D"): # DELETE
             if drawing.fname:
                 os.remove(drawing.fname)
                 tutor.message("Deleted %s" % drawing.fname)
-                drawing = Drawing(pad, scr)
                 reset(scr)
+                drawing = Drawing(scr)
+
         elif c == ord("?") or c == ord("h"): # HELP
             tutor.help()
         elif c in map(ord, PEN_TIPS): # PEN TIP
