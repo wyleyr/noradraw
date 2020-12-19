@@ -256,7 +256,7 @@ def main(scr):
     
     while True:
         c = scr.getch()
-        if c == ord("q"):
+        if c == ord("q"): # QUIT
             break
         elif c == curses.KEY_RESIZE:
             drawing.recenter()
@@ -276,6 +276,7 @@ def main(scr):
             reset(scr)
             drawing = Drawing(scr)
             tutor.new()
+            continue 
         elif c == ord("p"): # PEN UP/DOWN
             drawing.pen_down = not drawing.pen_down
             tutor.pen()
@@ -314,6 +315,16 @@ def main(scr):
             drawing.pen_tip = chr(c)
         elif c in map(ord, "01234567"): # COLOR SELECTION
             drawing.color_pair = int(chr(c))
+        elif c == curses.KEY_F3: # DEBUG
+            curses.savetty()
+            scr.move(0,0)
+            curses.reset_shell_mode()
+            scr.refresh()
+            import pdb
+            pdb.set_trace()
+            curses.resetty()
+            reset(scr)
+            drawing.recenter()
 
         drawing.draw()
 
