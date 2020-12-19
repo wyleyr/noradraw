@@ -57,6 +57,7 @@ class Drawing:
         if self.points: # restore to previous point before erased point, if any
             prev_point = self.points[-1]
             self.window.move(prev_point[0], prev_point[1])
+        self.refresh()
         
     def replay(self):
         self.window.clear()
