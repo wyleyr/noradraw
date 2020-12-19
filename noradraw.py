@@ -288,8 +288,8 @@ def main(scr):
             drawing.pen_down = not drawing.pen_down
             tutor.pen()
         elif c == ord("e"): # ERASE
-            drawing.erase_last()
             tutor.erase()
+            drawing.erase_last()
             continue # skip drawing, which would negate the erase
         elif c == ord("r"): # REPLAY CURRENT DRAWING
             tutor.message("OK, now it's my turn!")
