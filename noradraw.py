@@ -8,8 +8,15 @@ def init_colors():
     curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_RED)
     curses.init_pair(6, curses.COLOR_BLUE, curses.COLOR_CYAN)
     curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_WHITE)
-    # curses.init_pair(8, curses.COLOR_BLACK, 208) # orange-ish 
-    # curses.init_pair(9, curses.COLOR_YELLOW, 53) # darker purple-ish 
+
+def display_logo(scr):
+    with open("/home/rwl/drawings/logo.pickle", "rb") as logofile:
+        logo = Drawing(scr)
+        logo.points = pickle.load(logofile)
+        logo.replay()
+        logo.window.addstr(28,22,"Press N to start a new drawing")
+        logo.refresh()
+    
 
 PEN_TIPS = " ~`!@#$%^&*()-_+=vVxXoO|\/[]{}'.:<>\""
 
@@ -249,10 +256,10 @@ def directory_setup():
 def main(scr):
     reset(scr)
     init_colors()
+    display_logo(scr)
     drawing = Drawing(scr)
     tutor = Tutor(scr)
     save_dir = directory_setup()
-    inhibit_next_draw = False
     
     while True:
         c = scr.getch()
