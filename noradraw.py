@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import curses, time, pickle, os, random
 
 def init_colors():
