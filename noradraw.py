@@ -228,15 +228,25 @@ class Tutor:
         msg_win.addstr("L", curses.A_BOLD)
         msg_win.addstr(": LOAD DRAWING  ")
         msg_win.addstr("R", curses.A_BOLD)
-        msg_win.addstr(": RICHARD REPLAYS ")
+        msg_win.addstr(": OWL REPLAYS ")
 
         y, x = msg_win.getyx()
         msg_win.move(y+1, 1)
         msg_win.addstr("Q", curses.A_BOLD)
         msg_win.addstr(": QUIT")
 
+        y, x = msg_win.getyx()
+        msg_win.move(y+1, 19)
+        msg_win.addstr("Press any key to go back to the drawing!")
+
         msg_win.refresh()
-        #TODO: this breaks input. msg_win.getkey()
+
+        # for some reason we need to call getch() on self.parent (the screen),
+        # because calling it on msg_win apparently leaves control
+        # characters in the buffer and ends up setting the pen tip as
+        # a side effect.
+        self.parent.getch() 
+
         del msg_win
 
 
