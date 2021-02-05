@@ -24,14 +24,12 @@ You make drawings with eight colors and a handful of ASCII characters.
 No need to memorize these keys. Just play around! A helpful Owl will
 tutor you as you discover new functions.
 
-## Installing and running
+## Using
 
-noradraw is a one file program:
-
+noradraw is a one file program. Clone the repository to `noradraw`, then:
 ```
-git clone https://github.com/wyleyr/noradraw.git
-cd noradraw
-python3 noradraw.py
+python3 noradraw/noradraw.py
 ```
+Make sure you run it from a curses-supported terminal, of course! 
 
 
