@@ -27,7 +27,7 @@ def init_colors():
     curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_WHITE)
 
 def display_logo(scr):
-    with open("/home/rwl/drawings/logo.pickle", "rb") as logofile:
+    with open("logo.pickle", "rb") as logofile:
         logo = Drawing(scr)
         logo.points = pickle.load(logofile)
         logo.replay()
