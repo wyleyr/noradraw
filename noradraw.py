@@ -17,25 +17,6 @@
 
 import curses, time, pickle, os, random
 
-def init_colors():
-    curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_MAGENTA)
-    curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_YELLOW)
-    curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_BLUE)
-    curses.init_pair(4, curses.COLOR_YELLOW, curses.COLOR_GREEN)
-    curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_RED)
-    curses.init_pair(6, curses.COLOR_BLUE, curses.COLOR_CYAN)
-    curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_WHITE)
-
-def display_logo(scr):
-    with open("logo.pickle", "rb") as logofile:
-        logo = Drawing(scr)
-        logo.points = pickle.load(logofile)
-        logo.replay()
-        logo.window.addstr(28,22,"Press N to start a new drawing")
-        logo.refresh()
-    
-
-PEN_TIPS = " ~`!@#$%^&*()-_+=vVxXoO|\/[]{}'.:<>\""
 
 class Drawing:
     def __init__(self, screen):
@@ -265,8 +246,18 @@ class Tutor:
 
         del msg_win
 
+def init_colors():
+    "Setup color pairs for curses"
+    curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_MAGENTA)
+    curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_YELLOW)
+    curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_BLUE)
+    curses.init_pair(4, curses.COLOR_YELLOW, curses.COLOR_GREEN)
+    curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_RED)
+    curses.init_pair(6, curses.COLOR_BLUE, curses.COLOR_CYAN)
+    curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_WHITE)
 
 def reset(scr):
+    "Clear the screen and move the cursor to the center"
     scr.clear()
     scr.refresh()
     max_y, max_x = scr.getmaxyx()
@@ -274,12 +265,22 @@ def reset(scr):
 
 
 def directory_setup():
+    "Return the path to the drawings directory, creating it if needed"
     drawingsdir = os.path.expanduser("~/drawings")
     if not os.path.exists(drawingsdir):
         os.mkdir(drawingsdir)
 
     return drawingsdir
 
+def display_logo(scr):
+    "Display the noradraw logo"
+    with open("logo.pickle", "rb") as logofile:
+        logo = Drawing(scr)
+        logo.points = pickle.load(logofile)
+        logo.replay()
+        logo.window.addstr(28,22,"Press N to start a new drawing")
+        logo.refresh()
+    
 def main(scr):
     reset(scr)
     init_colors()
@@ -287,7 +288,8 @@ def main(scr):
     drawing = Drawing(scr)
     tutor = Tutor(scr)
     save_dir = directory_setup()
-    
+    pen_tips = " ~`!@#$%^&*()-_+=vvxxoo|\/[]{}'.:<>\""
+
     while True:
         c = scr.getch()
         if c == ord("q"): # QUIT
@@ -310,18 +312,18 @@ def main(scr):
             reset(scr)
             drawing = Drawing(scr)
             tutor.new()
-            continue 
+            continue # skip drawing: the new drawing should be empty
         elif c == ord("p"): # PEN UP/DOWN
             drawing.pen_down = not drawing.pen_down
             tutor.pen()
         elif c == ord("e"): # ERASE
             tutor.erase()
             drawing.erase_last()
-            continue # skip drawing, which would negate the erase
+            continue # skip drawing: that would negate the erase
         elif c == ord("r"): # REPLAY CURRENT DRAWING
             tutor.message("OK, now it's my turn!")
             drawing.replay()
-            continue
+            continue # skip drawing: that would add to it
         elif c == ord("s"): # SAVE CURRENT DRAWING
             try:
                 drawing.save(save_dir)
@@ -334,8 +336,9 @@ def main(scr):
                 tutor.message("Here's a drawing you made!\n(Or someone made for you!)")
                 drawing.load_random(save_dir)
             except IndexError:
-                message("There are no drawings to load!\nYou should save one first.")
-            continue
+                tutor.message("There are no drawings to load!\nYou should save one first.")
+            continue # skip drawing: the cursor hasn't moved
+
         elif c == ord("D"): # DELETE
             if drawing.fname:
                 os.remove(drawing.fname)
@@ -345,21 +348,26 @@ def main(scr):
 
         elif c == ord("?") or c == ord("h"): # HELP
             tutor.help()
-        elif c in map(ord, PEN_TIPS): # PEN TIP
+        elif c in map(ord, pen_tips): # PEN TIP
             drawing.pen_tip = chr(c)
         elif c in map(ord, "01234567"): # COLOR SELECTION
             drawing.color_pair = int(chr(c))
         elif c == curses.KEY_F3: # DEBUG
-            curses.savetty()
+            # save terminal state for later:
+            curses.savetty()  
+            # return to shell mode for debug session:
             scr.move(0,0)
             curses.reset_shell_mode()
             scr.refresh()
             import pdb
             pdb.set_trace()
+            # when debugging is finished, restore the previous state: 
             curses.resetty()
             reset(scr)
             drawing.recenter()
 
+        # draw a new 'pixel' at the current location with the current pen tip,
+        # if the pen is down: 
         drawing.draw()
 
 curses.wrapper(main)    
